@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samsat Checker - Cek Kendaraan Indonesia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        
+        /* Spring Animation Keyframes */
+        @keyframes springIn {
+            0% { transform: translateY(20px) scale(0.95); opacity: 0; }
+            60% { transform: translateY(-5px) scale(1.02); opacity: 1; }
+            80% { transform: translateY(2px) scale(0.99); }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        @keyframes springFadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes springScale {
+            0% { transform: scale(0.9); opacity: 0; }
+            60% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+        }
+        
+        @keyframes spinSlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideUp {
+            0% { transform: translateY(100%); opacity: 0; }
+            60% { transform: translateY(-10%); }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Animation Classes */
+        .spring-in {
+            animation: springIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        .spring-fade {
+            animation: springFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        .spring-scale {
+            animation: springScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        .spin-slow {
+            animation: spinSlow 2s linear infinite;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        /* Stagger delays */
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+        .delay-5 { animation-delay: 0.5s; opacity: 0; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Input focus */
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Hover effect */
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-[#080c14] text-white min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8 spring-in">
+            <h1 class="text-3xl font-bold text-white mb-2">
+                <svg class="inline-block w-8 h-8 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Samsat Checker
+            </h1>
+            <p class="text-slate-400 text-sm">Cek data kendaraan bermotor seluruh Indonesia</p>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="flex gap-2 mb-6 spring-in delay-1">
+            <button id="tabCek" onclick="switchTab('cek')" class="tab-btn active flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                Cek Pajak
+            </button>
+            <button id="tabNjkb" onclick="switchTab('njkb')" class="tab-btn flex-1 bg-slate-800 border border-slate-700 text-slate-400 px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 hover-lift">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Cek NJKB
+            </button>
+        </div>
+        
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- TAB: CEK PAJAK -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="panelCek">
+        <!-- Search Box -->
+        <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 mb-6 spring-in delay-1">
+            <form id="searchForm" class="flex gap-3">
+                <div class="flex-1 relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input 
+                        type="text" 
+                        id="nopolInput" 
+                        placeholder="Masukkan nomor polisi (contoh: BH1079LY)" 
+                        class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 transition-colors"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                </div>
+                <button 
+                    type="submit" 
+                    id="submitBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 hover-lift"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Cek
+                </button>
+            </form>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <span class="text-xs text-slate-500">Contoh:</span>
+                <button onclick="fillNopol('BH1079LY')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">BH1079LY</button>
+                <button onclick="fillNopol('BH1234AA')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">BH1234AA</button>
+                <button onclick="fillNopol('B1234AB')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">B1234AB (Jakarta)</button>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden">
+            <div class="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center spring-scale">
+                <div class="inline-block mb-4">
+                    <svg class="w-12 h-12 text-blue-500 spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </div>
+                <p class="text-slate-300 text-sm">Mengambil data kendaraan...</p>
+                <p class="text-slate-500 text-xs mt-1" id="loadingText">Menghubungkan ke server</p>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="bg-slate-900 border border-red-800 rounded-lg p-6 spring-in">
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-red-400 font-medium">Error</h3>
+                        <p class="text-slate-400 text-sm mt-1" id="errorMessage"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div id="resultsState" class="hidden">
+            <!-- Province Info -->
+            <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 mb-4 spring-in delay-1">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-white font-semibold text-lg" id="resultNopol"></h2>
+                            <p class="text-slate-400 text-sm" id="resultProvince"></p>
+                        </div>
+                    </div>
+                    <div id="resultBadge" class="px-3 py-1 rounded-full text-xs font-medium"></div>
+                </div>
+            </div>
+            
+            <!-- Owner Info -->
+            <div id="ownerCard" class="bg-slate-900 border border-slate-700 rounded-lg p-5 mb-4 hidden">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <h3 class="text-emerald-400 font-medium">Data Pemilik</h3>
+                </div>
+                <div class="space-y-3" id="ownerData"></div>
+            </div>
+            
+            <!-- Vehicle Info -->
+            <div id="vehicleCard" class="bg-slate-900 border border-slate-700 rounded-lg p-5 mb-4 hidden">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                    </svg>
+                    <h3 class="text-blue-400 font-medium">Data Kendaraan</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-3" id="vehicleData"></div>
+            </div>
+            
+            <!-- Tax Info -->
+            <div id="taxCard" class="bg-slate-900 border border-slate-700 rounded-lg p-5 mb-4 hidden">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <h3 class="text-yellow-400 font-medium">Informasi Pajak</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-3" id="taxData"></div>
+            </div>
+            
+            <!-- Raw JSON Toggle -->
+            <div class="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden spring-in delay-5">
+                <button onclick="toggleRaw()" class="w-full px-5 py-3 flex items-center justify-between text-slate-400 hover:text-white transition-colors">
+                    <span class="text-sm">Raw JSON Response</span>
+                    <svg id="rawToggleIcon" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="rawJson" class="hidden px-5 pb-5">
+                    <pre class="bg-slate-800 border border-slate-700 rounded-lg p-4 text-xs text-slate-300 overflow-x-auto"></pre>
+                </div>
+            </div>
+        </div>
+        </div><!-- end panelCek -->
+        
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- TAB: NJKB -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="panelNjkb" class="hidden">
+            <!-- NJKB Search Form -->
+            <div class="bg-slate-900 border border-slate-700 rounded-lg p-6 mb-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h3 class="text-white font-medium">Cek NJKB - SAMSAT DKI Jakarta</h3>
+                </div>
+                <p class="text-slate-400 text-sm mb-4">Nilai Jual Kendaraan Bermotor dari Bapenda DKI Jakarta</p>
+                
+                <form id="njkbForm" class="space-y-4">
+                    <!-- Jenis Kendaraan -->
+                    <div>
+                        <label class="block text-slate-400 text-xs mb-1.5">Jenis Kendaraan</label>
+                        <select id="njkbJenis" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-blue-500 transition-colors">
+                            <option value="">Pilih jenis...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Merek -->
+                    <div>
+                        <label class="block text-slate-400 text-xs mb-1.5">Merek Kendaraan</label>
+                        <div class="relative">
+                            <input type="text" id="njkbMerekSearch" placeholder="Ketik merek (Honda, Toyota, dll)..." 
+                                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:border-blue-500 transition-colors"
+                                autocomplete="off">
+                            <div id="njkbMerekDropdown" class="hidden absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg max-h-48 overflow-y-auto shadow-xl"></div>
+                        </div>
+                        <input type="hidden" id="njkbMerek" value="">
+                    </div>
+                    
+                    <!-- Tahun -->
+                    <div>
+                        <label class="block text-slate-400 text-xs mb-1.5">Tahun Pembuatan</label>
+                        <select id="njkbTahun" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-white text-sm focus:border-blue-500 transition-colors">
+                        </select>
+                    </div>
+                    
+                    <!-- Submit -->
+                    <div class="flex gap-3">
+                        <button type="submit" id="njkbSubmitBtn"
+                            class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm hover-lift">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Cari NJKB
+                        </button>
+                        <button type="button" onclick="njkbSearchAll()" id="njkbAllBtn"
+                            class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-4 py-2.5 rounded-lg font-medium transition-colors text-sm hover-lift" title="Ambil semua halaman">
+                            Semua
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- NJKB Loading -->
+            <div id="njkbLoading" class="hidden">
+                <div class="bg-slate-900 border border-slate-700 rounded-lg p-8 text-center">
+                    <svg class="w-10 h-10 text-emerald-500 spin-slow mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <p class="text-slate-300 text-sm">Mengambil data NJKB...</p>
+                </div>
+            </div>
+            
+            <!-- NJKB Error -->
+            <div id="njkbError" class="hidden">
+                <div class="bg-slate-900 border border-red-800 rounded-lg p-5">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-red-400 font-medium text-sm">Error</h3>
+                            <p class="text-slate-400 text-sm mt-1" id="njkbErrorMessage"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- NJKB Results -->
+            <div id="njkbResults" class="hidden">
+                <!-- Info bar -->
+                <div class="bg-slate-900 border border-slate-700 rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-white font-medium text-sm" id="njkbResultTitle"></h3>
+                            <p class="text-slate-400 text-xs mt-0.5" id="njkbResultMeta"></p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-emerald-400 text-sm font-medium" id="njkbResultCount"></span>
+                            <p class="text-slate-500 text-xs" id="njkbPageInfo"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Table -->
+                <div class="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-700 bg-slate-800">
+                                    <th class="text-left px-4 py-3 text-slate-400 font-medium text-xs">No</th>
+                                    <th class="text-left px-4 py-3 text-slate-400 font-medium text-xs">Type Kendaraan</th>
+                                    <th class="text-right px-4 py-3 text-slate-400 font-medium text-xs">NJKB (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="njkbTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="njkbPagination" class="hidden flex items-center justify-between mt-4">
+                    <button onclick="njkbPrevPage()" id="njkbPrevBtn" class="bg-slate-800 border border-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Sebelumnya
+                    </button>
+                    <span class="text-slate-400 text-xs" id="njkbPageIndicator"></span>
+                    <button onclick="njkbNextPage()" id="njkbNextBtn" class="bg-slate-800 border border-slate-700 text-slate-300 px-4 py-2 rounded-lg text-sm hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Berikutnya
+                    </button>
+                </div>
+            </div>
+        </div><!-- end panelNjkb -->
+        
+        <!-- Footer -->
+        <div class="text-center mt-8 text-slate-600 text-xs spring-fade delay-5">
+            <p>Samsat Checker v1.0 | Data dari API resmi samsat</p>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('searchForm');
+        const input = document.getElementById('nopolInput');
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const resultsState = document.getElementById('resultsState');
+        const loadingText = document.getElementById('loadingText');
+        
+        // Auto-uppercase input
+        input.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+        
+        // Fill nopol example
+        function fillNopol(nopol) {
+            input.value = nopol;
+            input.focus();
+        }
+        
+        // Toggle raw JSON
+        let rawVisible = false;
+        function toggleRaw() {
+            rawVisible = !rawVisible;
+            const el = document.getElementById('rawJson');
+            const icon = document.getElementById('rawToggleIcon');
+            el.classList.toggle('hidden');
+            icon.style.transform = rawVisible ? 'rotate(180deg)' : 'rotate(0)';
+        }
+        
+        // Form submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nopol = input.value.trim();
+            
+            if (!nopol) {
+                showError('Masukkan nomor polisi');
+                return;
+            }
+            
+            // Show loading
+            showLoading();
+            
+            // Animate loading text
+            const texts = ['Menghubungkan ke server', 'Query API samsat', 'Memproses data'];
+            let i = 0;
+            const textInterval = setInterval(() => {
+                i = (i + 1) % texts.length;
+                loadingText.textContent = texts[i];
+            }, 1000);
+            
+            try {
+                const response = await fetch('/api/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nopol })
+                });
+                
+                const data = await response.json();
+                
+                clearInterval(textInterval);
+                
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    showError(data.error || 'Data tidak ditemukan');
+                }
+            } catch (err) {
+                clearInterval(textInterval);
+                showError('Gagal menghubungi server');
+            }
+        });
+        
+        function showLoading() {
+            loadingState.classList.remove('hidden');
+            errorState.classList.add('hidden');
+            resultsState.classList.add('hidden');
+        }
+        
+        function showError(message) {
+            loadingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            resultsState.classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        function showResults(data) {
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            resultsState.classList.remove('hidden');
+            
+            const d = data.data;
+            
+            // Province info
+            document.getElementById('resultNopol').textContent = d.nopol || input.value.toUpperCase();
+            document.getElementById('resultProvince').textContent = data.province || d.wilayah;
+            
+            const badge = document.getElementById('resultBadge');
+            badge.textContent = data.method;
+            badge.className = 'px-3 py-1 rounded-full text-xs font-medium bg-blue-900 text-blue-300';
+            
+            // Owner data
+            const ownerCard = document.getElementById('ownerCard');
+            const ownerData = document.getElementById('ownerData');
+            ownerCard.classList.add('hidden');
+            ownerData.innerHTML = '';
+            
+            if (d.nama_pemilik || d.alamat) {
+                ownerCard.classList.remove('hidden');
+                ownerCard.classList.add('spring-in', 'delay-2');
+                
+                if (d.nama_pemilik) {
+                    ownerData.innerHTML += createField('Nama', d.nama_pemilik);
+                }
+                if (d.alamat) {
+                    ownerData.innerHTML += createField('Alamat', d.alamat);
+                }
+            }
+            
+            // Vehicle data
+            const vehicleCard = document.getElementById('vehicleCard');
+            const vehicleData = document.getElementById('vehicleData');
+            vehicleCard.classList.remove('hidden');
+            vehicleCard.classList.add('spring-in', 'delay-3');
+            vehicleData.innerHTML = '';
+            
+            const vehicleFields = [
+                { key: 'merek', label: 'Merek' },
+                { key: 'model', label: 'Model' },
+                { key: 'jenis', label: 'Jenis' },
+                { key: 'tahun', label: 'Tahun' },
+                { key: 'warna', label: 'Warna' },
+                { key: 'cc', label: 'Kapasitas Mesin' },
+                { key: 'bbm', label: 'Bahan Bakar' },
+                { key: 'njkb', label: 'NJKB' },
+                { key: 'lokasi', label: 'Lokasi Samsat' },
+            ];
+            
+            vehicleFields.forEach(f => {
+                if (d[f.key]) {
+                    vehicleData.innerHTML += createField(f.label, d[f.key]);
+                }
+            });
+            
+            // Tax data
+            const taxCard = document.getElementById('taxCard');
+            const taxData = document.getElementById('taxData');
+            taxCard.classList.remove('hidden');
+            taxCard.classList.add('spring-in', 'delay-4');
+            taxData.innerHTML = '';
+            
+            const taxFields = [
+                { key: 'tgl_akhir_pkb', label: 'Akhir PKB' },
+                { key: 'tgl_akhir_stnk', label: 'Akhir STNK' },
+                { key: 'pkb', label: 'PKB' },
+                { key: 'swdklljj', label: 'SWDKLLJJ' },
+                { key: 'pajak_progresif', label: 'Pajak Progresif' },
+                { key: 'total_pajak', label: 'Total Pajak' },
+                { key: 'denda_pkb', label: 'Denda PKB' },
+                { key: 'jr_pkb', label: 'JR PKB' },
+                { key: 'jr_total', label: 'JR Total' },
+                { key: 'pnbp_stnk', label: 'PNBP STNK' },
+                { key: 'pnbp_tnkb', label: 'PNBP TNKB' },
+            ];
+            
+            taxFields.forEach(f => {
+                if (d[f.key]) {
+                    taxData.innerHTML += createField(f.label, d[f.key]);
+                }
+            });
+            
+            // Hide tax card if empty
+            if (taxData.children.length === 0) {
+                taxCard.classList.add('hidden');
+            }
+            
+            // Raw JSON
+            document.querySelector('#rawJson pre').textContent = JSON.stringify(data, null, 2);
+            
+            // Scroll to results
+            resultsState.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        function createField(label, value) {
+            return `
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-3">
+                    <div class="text-slate-500 text-xs mb-1">${label}</div>
+                    <div class="text-white text-sm font-medium">${value}</div>
+                </div>
+            `;
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // TAB SWITCHING
+        // ═══════════════════════════════════════════════════════════
+        
+        function switchTab(tab) {
+            const panelCek = document.getElementById('panelCek');
+            const panelNjkb = document.getElementById('panelNjkb');
+            const tabCek = document.getElementById('tabCek');
+            const tabNjkb = document.getElementById('tabNjkb');
+            
+            if (tab === 'cek') {
+                panelCek.classList.remove('hidden');
+                panelNjkb.classList.add('hidden');
+                tabCek.className = 'tab-btn active flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2';
+                tabNjkb.className = 'tab-btn flex-1 bg-slate-800 border border-slate-700 text-slate-400 px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 hover-lift';
+            } else {
+                panelCek.classList.add('hidden');
+                panelNjkb.classList.remove('hidden');
+                tabNjkb.className = 'tab-btn active flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2';
+                tabCek.className = 'tab-btn flex-1 bg-slate-800 border border-slate-700 text-slate-400 px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 hover-lift';
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // NJKB FUNCTIONALITY
+        // ═══════════════════════════════════════════════════════════
+        
+        let njkbMerekList = [];
+        let njkbCurrentPage = 1;
+        let njkbCurrentPupd = null;
+        let njkbLastQuery = {};
+        
+        // Initialize NJKB form
+        async function initNjkb() {
+            // Load jenis
+            try {
+                const jenisRes = await fetch('/api/njkb/jenis');
+                const jenisData = await jenisRes.json();
+                const jenisSelect = document.getElementById('njkbJenis');
+                for (const [kode, nama] of Object.entries(jenisData)) {
+                    const opt = document.createElement('option');
+                    opt.value = kode;
+                    opt.textContent = `${nama} (${kode})`;
+                    jenisSelect.appendChild(opt);
+                }
+            } catch (e) {
+                console.error('Failed to load jenis:', e);
+            }
+            
+            // Load merek
+            try {
+                const merekRes = await fetch('/api/njkb/merek');
+                njkbMerekList = await merekRes.json();
+            } catch (e) {
+                console.error('Failed to load merek:', e);
+            }
+            
+            // Populate tahun (1978-2026, default 2024)
+            const tahunSelect = document.getElementById('njkbTahun');
+            for (let y = 2026; y >= 1978; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                if (y === 2024) opt.selected = true;
+                tahunSelect.appendChild(opt);
+            }
+        }
+        
+        // Merek autocomplete
+        const merekSearch = document.getElementById('njkbMerekSearch');
+        const merekDropdown = document.getElementById('njkbMerekDropdown');
+        const merekHidden = document.getElementById('njkbMerek');
+        
+        merekSearch.addEventListener('input', (e) => {
+            const val = e.target.value.toUpperCase().trim();
+            merekHidden.value = '';
+            
+            if (val.length < 2) {
+                merekDropdown.classList.add('hidden');
+                return;
+            }
+            
+            const filtered = njkbMerekList.filter(m => m.includes(val)).slice(0, 20);
+            
+            if (filtered.length === 0) {
+                merekDropdown.classList.add('hidden');
+                return;
+            }
+            
+            merekDropdown.innerHTML = filtered.map(m => 
+                `<div class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 cursor-pointer transition-colors" onclick="selectMerek('${m}')">${m}</div>`
+            ).join('');
+            merekDropdown.classList.remove('hidden');
+        });
+        
+        merekSearch.addEventListener('blur', () => {
+            setTimeout(() => merekDropdown.classList.add('hidden'), 200);
+        });
+        
+        function selectMerek(merek) {
+            merekSearch.value = merek;
+            merekHidden.value = merek;
+            merekDropdown.classList.add('hidden');
+        }
+        
+        // NJKB Form submit
+        const njkbForm = document.getElementById('njkbForm');
+        njkbForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await doNjkbSearch(false);
+        });
+        
+        async function doNjkbSearch(allPages) {
+            const jenis = document.getElementById('njkbJenis').value;
+            const merek = merekHidden.value || merekSearch.value.trim().toUpperCase();
+            const tahun = document.getElementById('njkbTahun').value;
+            
+            if (!jenis || !merek || !tahun) {
+                showNjkbError('Lengkapi semua field: Jenis, Merek, dan Tahun');
+                return;
+            }
+            
+            showNjkbLoading();
+            
+            const body = {
+                jenis: jenis,
+                tahun: parseInt(tahun),
+                merek: merek,
+            };
+            
+            if (allPages) {
+                body.all_pages = true;
+                body.max_pages = 20;
+            } else {
+                body.page = njkbCurrentPage;
+                if (njkbCurrentPupd) body.pupd = njkbCurrentPupd;
+            }
+            
+            njkbLastQuery = body;
+            
+            try {
+                const res = await fetch('/api/njkb/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    showNjkbResults(data, allPages);
+                } else {
+                    showNjkbError(data.error || 'Gagal mengambil data NJKB');
+                }
+            } catch (err) {
+                showNjkbError('Gagal menghubungi server');
+            }
+        }
+        
+        function njkbSearchAll() {
+            njkbCurrentPage = 1;
+            njkbCurrentPupd = null;
+            doNjkbSearch(true);
+        }
+        
+        function njkbNextPage() {
+            // Need to re-query with NEXT
+            const body = { ...njkbLastQuery };
+            body.page = njkbCurrentPage + 1;
+            body.pupd = njkbCurrentPupd;
+            delete body.all_pages;
+            
+            showNjkbLoading();
+            
+            fetch('/api/njkb/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    njkbCurrentPage = data.pagination.current_page;
+                    njkbCurrentPupd = data.pagination.pupd;
+                    showNjkbResults(data, false);
+                } else {
+                    showNjkbError(data.error);
+                }
+            })
+            .catch(() => showNjkbError('Gagal mengambil halaman berikutnya'));
+        }
+        
+        function njkbPrevPage() {
+            // PREV not easily supported without re-querying from page 1
+            // Reset to page 1
+            njkbCurrentPage = 1;
+            njkbCurrentPupd = null;
+            doNjkbSearch(false);
+        }
+        
+        function showNjkbLoading() {
+            document.getElementById('njkbLoading').classList.remove('hidden');
+            document.getElementById('njkbError').classList.add('hidden');
+            document.getElementById('njkbResults').classList.add('hidden');
+        }
+        
+        function showNjkbError(msg) {
+            document.getElementById('njkbLoading').classList.add('hidden');
+            document.getElementById('njkbError').classList.remove('hidden');
+            document.getElementById('njkbResults').classList.add('hidden');
+            document.getElementById('njkbErrorMessage').textContent = msg;
+        }
+        
+        function showNjkbResults(data, allPages) {
+            document.getElementById('njkbLoading').classList.add('hidden');
+            document.getElementById('njkbError').classList.add('hidden');
+            document.getElementById('njkbResults').classList.remove('hidden');
+            
+            const meta = data.metadata;
+            const entries = data.data;
+            
+            // Title & meta
+            document.getElementById('njkbResultTitle').textContent = 
+                `NJKB ${meta.jenis} - ${meta.merek} (${meta.tahun})`;
+            document.getElementById('njkbResultMeta').textContent = 
+                'Sumber: Bapenda DKI Jakarta';
+            document.getElementById('njkbResultCount').textContent = 
+                `${data.total_entries} type kendaraan`;
+            
+            if (allPages) {
+                document.getElementById('njkbPageInfo').textContent = `${data.pages_scraped} halaman`;
+                document.getElementById('njkbPagination').classList.add('hidden');
+            } else {
+                document.getElementById('njkbPageInfo').textContent = `Halaman ${data.pagination.current_page}`;
+                
+                // Show pagination
+                const pag = document.getElementById('njkbPagination');
+                pag.classList.remove('hidden');
+                document.getElementById('njkbPrevBtn').disabled = !data.pagination.has_prev;
+                document.getElementById('njkbNextBtn').disabled = !data.pagination.has_next;
+                document.getElementById('njkbPageIndicator').textContent = `Halaman ${data.pagination.current_page}`;
+                
+                // Update pagination state
+                njkbCurrentPage = data.pagination.current_page;
+                njkbCurrentPupd = data.pagination.pupd;
+            }
+            
+            // Populate table
+            const tbody = document.getElementById('njkbTableBody');
+            tbody.innerHTML = entries.map((e, i) => `
+                <tr class="border-b border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-850'} hover:bg-slate-800 transition-colors">
+                    <td class="px-4 py-2.5 text-slate-400 text-xs">${e.no}</td>
+                    <td class="px-4 py-2.5 text-white text-xs font-medium">${e.type}</td>
+                    <td class="px-4 py-2.5 text-emerald-400 text-xs font-medium text-right">${e.njkb_formatted}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Initialize NJKB on load
+        initNjkb();
+    </script>
+</body>
+</html>
