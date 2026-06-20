@@ -136,15 +136,26 @@
                     </svg>
                     <input 
                         type="text" 
-                        id="nopolInput" 
-                        placeholder="Masukkan nomor polisi (contoh: BH1079LY)" 
+                        id="nopolInput"
+                        placeholder=""
                         class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 transition-colors"
                         autocomplete="off"
                         spellcheck="false"
                     >
                 </div>
-                <button 
-                    type="submit" 
+                <div id="vinField" class="hidden">
+                    <input
+                        type="text"
+                        id="vinInput"
+                        placeholder="5 digit no rangka"
+                        class="w-48 bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 transition-colors"
+                        autocomplete="off"
+                        spellcheck="false"
+                        maxlength="5"
+                    >
+                </div>
+                <button
+                    type="submit"
                     id="submitBtn"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 hover-lift"
                 >
@@ -154,12 +165,7 @@
                     Cek
                 </button>
             </form>
-            <div class="mt-3 flex flex-wrap gap-2">
-                <span class="text-xs text-slate-500">Contoh:</span>
-                <button onclick="fillNopol('BH1079LY')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">BH1079LY</button>
-                <button onclick="fillNopol('BH1234AA')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">BH1234AA</button>
-                <button onclick="fillNopol('B1234AB')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors">B1234AB (Jakarta)</button>
-            </div>
+
         </div>
         
         <!-- Loading State -->
@@ -400,12 +406,35 @@
         const input = document.getElementById('nopolInput');
         const loadingState = document.getElementById('loadingState');
         const errorState = document.getElementById('errorState');
+
+        // Random placeholder rotation
+        const examples = [
+            'BH1079LY', 'BH1234AA', 'B1234AB', 'B5678CD',
+            'D1234EF', 'G1234GH', 'N1234AA', 'L5678ZZ',
+            'W1234AB', 'DK1234AB', 'BM1234CD', 'BA1234EF'
+        ];
+        let exIdx = Math.floor(Math.random() * examples.length);
+        function rotatePlaceholder() {
+            input.setAttribute('placeholder', examples[exIdx]);
+            exIdx = (exIdx + 1) % examples.length;
+        }
+        rotatePlaceholder();
+        setInterval(rotatePlaceholder, 3000);
+
+        // Fill nopol example
         const resultsState = document.getElementById('resultsState');
         const loadingText = document.getElementById('loadingText');
         
-        // Auto-uppercase input
+        // Auto-uppercase input + VIN field toggle
         input.addEventListener('input', (e) => {
             e.target.value = e.target.value.toUpperCase();
+            const val = e.target.value.toUpperCase();
+            const vinField = document.getElementById('vinField');
+            if (val.startsWith('DK') && val.length >= 3) {
+                vinField.classList.remove('hidden');
+            } else {
+                vinField.classList.add('hidden');
+            }
         });
         
         // Fill nopol example
@@ -446,10 +475,11 @@
             }, 1000);
             
             try {
+                const vin = document.getElementById('vinInput')?.value?.trim() || '';
                 const response = await fetch('/api/check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nopol })
+                    body: JSON.stringify({ nopol, vin })
                 });
                 
                 const data = await response.json();
@@ -459,7 +489,13 @@
                 if (data.success) {
                     showResults(data);
                 } else {
-                    showError(data.error || 'Data tidak ditemukan');
+                    if (data.data?.requires_vin) {
+                        document.getElementById('vinField').classList.remove('hidden');
+                        document.getElementById('vinInput').focus();
+                        showError(data.error || 'Masukkan 5 digit terakhir no rangka');
+                    } else {
+                        showError(data.error || 'Data tidak ditemukan');
+                    }
                 }
             } catch (err) {
                 clearInterval(textInterval);

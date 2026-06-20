@@ -118,6 +118,7 @@ User Input (Nopol)
 | Kode | Provinsi | Status |
 |------|----------|--------|
 | BH | Jambi | ✅ READY (API) |
+| DK | Bali | ✅ READY (Form POST) |
 | B | DKI Jakarta | 🟡 PARTIAL (NJKB only) |
 | G,H,K,R | Jawa Tengah | 🟡 PARTIAL |
 | A | Banten | 🟡 PARTIAL |

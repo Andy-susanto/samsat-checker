@@ -45,8 +45,9 @@ def check_vehicle():
     
     # Query API
     try:
+        vin = data.get('vin', '').strip()
         api = SamsatAPI(verbose=False)
-        result = api.query(nopol, province)
+        result = api.query(nopol, province, vin=vin or None)
         
         if result.get('success'):
             return jsonify({
@@ -58,6 +59,7 @@ def check_vehicle():
         else:
             return jsonify({
                 'success': False,
+                'data': {'requires_vin': result.get('requires_vin', False)},
                 'error': result.get('error', 'Data tidak ditemukan')
             })
     except Exception as e:

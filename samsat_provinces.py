@@ -62,7 +62,7 @@ PROVINCES = {
     'DS': {'name': 'Sulawesi Selatan (Palopo)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
 
     # ===== BALI & NUSA TENGGARA =====
-    'DK': {'name': 'Bali', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
+    'DK': {'name': 'Bali', 'api_status': 'READY', 'api_url': 'https://portal.bpdbali.id/infosamsat/', 'method': 'form_post'},
     'EA': {'name': 'Nusa Tenggara Barat', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'EB': {'name': 'Nusa Tenggara Timur', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'DH': {'name': 'Nusa Tenggara Timur (Kupang)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},

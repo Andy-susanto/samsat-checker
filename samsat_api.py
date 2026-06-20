@@ -60,7 +60,7 @@ class SamsatAPI:
         if key:
             self.api_keys['BH'] = key
 
-    def query(self, nopol: str, province: dict) -> dict:
+    def query(self, nopol: str, province: dict, vin: str = None) -> dict:
         """Main query method - routes to appropriate backend"""
         if not self.session:
             return {
@@ -77,10 +77,13 @@ class SamsatAPI:
             print(f"  [DEBUG] Kode: {kode}, API: {api_url}, Method: {method}")
             print(f"  [DEBUG] API Keys loaded: {list(self.api_keys.keys())}")
 
-        # Route based on province method
+        # Route based on province
         if kode == 'BH':
             # Jambi - try multiple methods
             return self._query_jambi(nopol)
+        elif kode == 'DK':
+            # Bali - form POST, needs VIN
+            return self._query_bali(nopol, vin)
         elif method == 'web_scrape':
             return self._query_web_scrape(nopol, province)
         elif api_url and province.get('api_status') == 'READY':
@@ -512,6 +515,152 @@ class SamsatAPI:
                 print(f"  [DEBUG] Web API error: {e}")
 
         return {'success': False, 'error': 'Web API tidak tersedia', 'method': 'web_api'}
+
+    def _query_bali(self, nopol: str, vin: str = None) -> dict:
+        """Query Bali Samsat via portal.bpdbali.id/infosamsat/"""
+        import re
+        import urllib.parse
+
+        if not vin or len(vin.strip()) < 3:
+            return {
+                'success': False,
+                'error': 'No rangka (5 digit terakhir) wajib diisi untuk Bali',
+                'method': 'bali_form',
+                'requires_vin': True
+            }
+
+        vin = vin.strip()[:5]
+        base_url = "https://portal.bpdbali.id/infosamsat/"
+
+        try:
+            # Step 1: GET session + form token
+            resp = self.session.get(base_url, timeout=15)
+            if resp.status_code != 200:
+                return {'success': False, 'error': f'Bali portal error: {resp.status_code}', 'method': 'bali_form'}
+
+            html = resp.text
+
+            # Extract jsessionid from form action
+            jsid_match = re.search(r'jsessionid=([^"&\s\']+)', html)
+            if not jsid_match:
+                return {'success': False, 'error': 'Gagal dapat session Bali', 'method': 'bali_form'}
+            session_id = jsid_match.group(1)
+
+            # Extract t:formdata hidden field
+            formdata_match = re.search(r'name=["\']t:formdata["\'][^>]*value=["\']([^"\']+)["\']', html, re.I)
+            if not formdata_match:
+                formdata_match = re.search(r'value=["\']([^"\']+)["\'][^>]*name=["\']t:formdata["\']', html, re.I)
+            if not formdata_match:
+                return {'success': False, 'error': 'Gagal dapat form token Bali', 'method': 'bali_form'}
+            form_token = formdata_match.group(1)
+
+            # Parse nopol: DK1234AB -> nomor=1234, seri=AB
+            match = re.match(r'^DK(\d{1,4})([A-Z]{0,3})$', nopol.upper())
+            if not match:
+                return {'success': False, 'error': 'Format nopol Bali tidak valid (contoh: DK1234AB)', 'method': 'bali_form'}
+            nomor = match.group(1)
+            seri = match.group(2) or ''
+
+            # Step 2: POST form
+            post_url = f"{base_url}index.form;jsessionid={session_id}"
+            form_data = {
+                't:formdata': form_token,
+                'textfield': 'DK',
+                'policeField': nomor + seri,
+                'policeNumberType': '01',  # 01=Putih
+                'vinField': vin,
+                'process': 'PROSES',
+            }
+
+            resp2 = self.session.post(
+                post_url,
+                data=form_data,
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Origin': 'https://portal.bpdbali.id',
+                    'Referer': base_url,
+                },
+                timeout=15,
+            )
+
+            result_html = resp2.text
+
+            # Check for errors
+            if 'KENDARAAN TIDAK DITEMUKAN' in result_html.upper():
+                return {'success': False, 'error': 'Kendaraan tidak ditemukan. Cek nopol & no rangka.', 'method': 'bali_form'}
+            if 'KONEKSI GAGAL' in result_html.upper():
+                return {'success': False, 'error': 'Koneksi ke server Bali gagal', 'method': 'bali_form'}
+            if 'Error' in result_html:
+                err_match = re.search(r'Error\s*:\s*(.*?)[<\n]', result_html, re.I)
+                if err_match:
+                    return {'success': False, 'error': f'Bali: {err_match.group(1).strip()}', 'method': 'bali_form'}
+
+            # Parse result table
+            data = self._parse_bali_response(result_html, nopol)
+            if data:
+                return {'success': True, 'data': data, 'method': 'bali_form'}
+
+            return {'success': False, 'error': 'Gagal parse response Bali', 'method': 'bali_form'}
+
+        except Exception as e:
+            return {'success': False, 'error': f'Error Bali: {str(e)}', 'method': 'bali_form'}
+
+    def _parse_bali_response(self, html: str, nopol: str) -> dict:
+        """Parse Bali Samsat HTML response into structured data"""
+        from bs4 import BeautifulSoup
+
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            result = {'nopol': nopol, 'raw_fields': {}}
+
+            # Bali returns data in table rows or label-value pairs
+            rows = soup.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) >= 2:
+                    key = cells[0].get_text(strip=True)
+                    val = cells[1].get_text(strip=True)
+                    if key and val and key != val:
+                        result['raw_fields'][key] = val
+
+            # Also check for label-value in divs
+            labels = soup.find_all(['label', 'strong', 'b', 'span'])
+            for label in labels:
+                text = label.get_text(strip=True)
+                next_el = label.find_next_sibling()
+                if next_el and len(text) > 2:
+                    val = next_el.get_text(strip=True)
+                    if val and len(val) > 1:
+                        result['raw_fields'][text] = val
+
+            # Try to extract known fields
+            field_map = {
+                'nama': ['nama', 'pemilik', 'owner'],
+                'alamat': ['alamat', 'address'],
+                'merk': ['merk', 'merek', 'brand', 'merk kendaraan'],
+                'model': ['model', 'tipe', 'type', 'type kendaraan'],
+                'tahun': ['tahun', 'year'],
+                'warna': ['warna', 'color'],
+                'cc': ['cc', 'silinder', 'cylinder', 'isi silinder'],
+                'pkb': ['pkb', 'pokok', 'pajak pokok'],
+                'swdkllj': ['swdkllj', 'swdk'],
+                'pnbp': ['pnbp'],
+                'total': ['total', 'jumlah'],
+                'jatuh_tempo': ['jatuh tempo', 'tempo', 'due'],
+            }
+
+            for target_key, keywords in field_map.items():
+                for raw_key, raw_val in result['raw_fields'].items():
+                    if any(kw in raw_key.lower() for kw in keywords):
+                        result[target_key] = raw_val
+                        break
+
+            if result.get('raw_fields'):
+                return result
+            return None
+
+        except Exception:
+            return None
 
     def _query_fallback(self, nopol: str, province: dict) -> dict:
         """Fallback query using common patterns"""
