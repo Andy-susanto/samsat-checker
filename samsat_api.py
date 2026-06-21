@@ -84,6 +84,9 @@ class SamsatAPI:
         elif kode == 'DK':
             # Bali - form POST, needs VIN
             return self._query_bali(nopol, vin)
+        elif kode in ('AB', 'Z'):
+            # DIY Yogyakarta - JSON API (sleman)
+            return self._query_diy(nopol)
         elif method == 'web_scrape':
             return self._query_web_scrape(nopol, province)
         elif api_url and province.get('api_status') == 'READY':
@@ -661,6 +664,75 @@ class SamsatAPI:
 
         except Exception:
             return None
+
+    def _query_diy(self, nopol: str) -> dict:
+        """Query DIY Yogyakarta Samsat via samsatsleman.jogjaprov.go.id"""
+        import re
+
+        # Parse nopol: AB1234AA -> nomor=1234, seri=AA
+        match = re.match(r'^([A-Z]{1,2})(\d{1,4})([A-Z]{0,3})$', nopol.upper())
+        if not match:
+            return {'success': False, 'error': 'Format nopol tidak valid', 'method': 'diy_api'}
+
+        nomor = match.group(2)
+        seri = match.group(3) or ''
+
+        api_url = "https://samsatsleman.jogjaprov.go.id/cek/pages/getpajak"
+
+        try:
+            resp = self.session.post(
+                api_url,
+                data={'nomer': nomor, 'kode_belakang': seri},
+                headers={
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Origin': 'https://samsatsleman.jogjaprov.go.id',
+                    'Referer': 'https://samsatsleman.jogjaprov.go.id/cek/pajak',
+                },
+                timeout=15,
+            )
+
+            result = resp.json()
+
+            if result.get('status') != 'success':
+                return {'success': False, 'error': result.get('message', 'Error DIY'), 'method': 'diy_api'}
+
+            data = result.get('data')
+            if not data:
+                return {'success': False, 'error': 'Kendaraan tidak ditemukan', 'method': 'diy_api'}
+
+            # Parse the JSON response
+            vehicle = {
+                'nopol': result.get('nopol', nopol),
+                'merk': (data.get('nmmerekkb') or '').strip(),
+                'model': (data.get('nmmodelkb') or '').strip(),
+                'tahun': data.get('tahunkb', ''),
+                'pkb_pokok': data.get('pkbpok', '0'),
+                'pkb_denda': data.get('pkbden', '0'),
+                'swdkllj_pokok': data.get('swdpok', '0'),
+                'swdkllj_denda': data.get('swdden', '0'),
+                'swdkllj': data.get('swdkllj', '0'),
+                'pnbp': data.get('pnbp', '0'),
+                'total': str(
+                    (int(data.get('pkbpok') or 0)) +
+                    (int(data.get('pkbden') or 0)) +
+                    (int(data.get('swdpok') or 0)) +
+                    (int(data.get('swdden') or 0))
+                ),
+                'jatuh_tempo': data.get('tgakhirpkb', ''),
+            }
+
+            # Add raw fields for display
+            vehicle['raw_fields'] = {}
+            for k, v in data.items():
+                if v and str(v).strip() and str(v).strip() != '0':
+                    vehicle['raw_fields'][k] = str(v).strip()
+
+            return {'success': True, 'data': vehicle, 'method': 'diy_api'}
+
+        except requests.exceptions.JSONDecodeError:
+            return {'success': False, 'error': 'Response bukan JSON', 'method': 'diy_api'}
+        except Exception as e:
+            return {'success': False, 'error': f'Error DIY: {str(e)}', 'method': 'diy_api'}
 
     def _query_fallback(self, nopol: str, province: dict) -> dict:
         """Fallback query using common patterns"""

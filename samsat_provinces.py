@@ -28,7 +28,7 @@ PROVINCES = {
     'K':  {'name': 'Jawa Tengah (Pekalongan)', 'api_status': 'PARTIAL', 'api_url': None, 'method': 'web_scrape'},
     'R':  {'name': 'Jawa Tengah (Banyumas)', 'api_status': 'PARTIAL', 'api_url': None, 'method': 'web_scrape'},
     'AA': {'name': 'Jawa Timur (Kediri)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
-    'AB': {'name': 'Jawa Timur (Malang)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
+    'AB': {'name': 'DIY Yogyakarta', 'api_status': 'READY', 'api_url': 'https://samsatsleman.jogjaprov.go.id/cek/pages/getpajak', 'method': 'json_api'},
     'AG': {'name': 'Jawa Timur (Madiun)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'AD': {'name': 'Jawa Timur (Surabaya)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'AE': {'name': 'Jawa Timur (Jember)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
@@ -40,7 +40,7 @@ PROVINCES = {
     'P':  {'name': 'Jawa Timur (Surabaya)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'T':  {'name': 'Jawa Timur (Tulungagung)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
     'AG': {'name': 'Jawa Timur (Madiun)', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
-    'Z':  {'name': 'DIY Yogyakarta', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
+    'Z':  {'name': 'DIY Yogyakarta (Bantul)', 'api_status': 'READY', 'api_url': 'https://samsatsleman.jogjaprov.go.id/cek/pages/getpajak', 'method': 'json_api'},
 
     # ===== KALIMANTAN =====
     'KB': {'name': 'Kalimantan Barat', 'api_status': 'UNAVAIL', 'api_url': None, 'method': None},
